@@ -79,8 +79,12 @@ footer{max-width:1100px;margin:0 auto;padding:0 18px 30px;color:#69747b;font-siz
 <footer id="footerText">FMたまん 76.3MHz｜番組表</footer>
 
 <script>
-// 公開スプレッドシートのCSV URL
-const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT_F4wafmKFLfNKp-_46zgBzCFiS56l3vXVu0f1JmZWj_HGX6JB2juzJGO03QJSav3EKhI7kBLPPLXK/pub?output=csv';
+// ベースとなるCSV公開URL
+const BASE_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT_F4wafmKFLfNKp-_46zgBzCFiS56l3vXVu0f1JmZWj_HGX6JB2juzJGO03QJSav3EKhI7kBLPPLXK/pub?output=csv';
+
+// それぞれのシートを指定してCSVを取得するURL
+const CONFIG_URL = `${BASE_CSV_URL}&sheet=Config`;
+const SCHEDULE_URL = `${BASE_CSV_URL}&sheet=Schedule`;
 
 let schedule = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
 const labels = {mon:"月曜日",tue:"火曜日",wed:"水曜日",thu:"木曜日",fri:"金曜日",sat:"土曜日",sun:"日曜日"};
@@ -120,26 +124,34 @@ function show(day){
 
 async function loadData() {
   try {
-    const res = await fetch(CSV_URL);
-    if (!res.ok) throw new Error('CSV取得エラー');
-    const rows = parseCSV(await res.text());
-    
-    const newSchedule = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
-    
-    rows.slice(1).forEach(row => {
-      const [type, dayOrKey, val1, val2, val3] = row;
-      if (type === 'config' && dayOrKey === 'effective_date') {
-        if (val1) {
-          document.getElementById('effectiveText').textContent = val1;
-          document.getElementById('footerText').innerHTML = `FMたまん 76.3MHz｜番組表（${val1}）<br>本ページはスプレッドシートからリアルタイム配信されています。`;
-        }
-      } else if (type === 'schedule' && dayOrKey && newSchedule[dayOrKey]) {
-        newSchedule[dayOrKey].push([val1 || '', val2 || '', val3 || '']);
+    // 1. Configシートの読み込み
+    const configRes = await fetch(CONFIG_URL);
+    if (configRes.ok) {
+      const rows = parseCSV(await configRes.text());
+      const effectiveRow = rows.find(r => r[0] === 'effective_date');
+      if (effectiveRow && effectiveRow[1]) {
+        const val = effectiveRow[1];
+        document.getElementById('effectiveText').textContent = val;
+        document.getElementById('footerText').innerHTML = `FMたまん 76.3MHz｜番組表（${val}）<br>本ページはスプレッドシートからリアルタイム配信されています。`;
       }
-    });
+    }
 
-    schedule = newSchedule;
-    show(currentDay);
+    // 2. Scheduleシートの読み込み
+    const scheduleRes = await fetch(SCHEDULE_URL);
+    if (scheduleRes.ok) {
+      const rows = parseCSV(await scheduleRes.text());
+      const newSchedule = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
+      
+      rows.slice(1).forEach(row => {
+        const [day, time, name, detail] = row;
+        if (day && newSchedule[day]) {
+          newSchedule[day].push([time || '', name || '', detail || '']);
+        }
+      });
+
+      schedule = newSchedule;
+      show(currentDay);
+    }
   } catch (err) {
     console.error('データ読み込みエラー:', err);
     root.innerHTML = '<div style="padding:20px;color:red;">データの読み込みに失敗しました。</div>';
