@@ -79,7 +79,7 @@ footer{max-width:1100px;margin:0 auto;padding:0 18px 30px;color:#69747b;font-siz
 <footer id="footerText">FMたまん 76.3MHz｜番組表</footer>
 
 <script>
-// Googleスプレッドシートを「ウェブに公開（CSV）」したURLを設定してください
+// 公開スプレッドシートのCSV URL
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT_F4wafmKFLfNKp-_46zgBzCFiS56l3vXVu0f1JmZWj_HGX6JB2juzJGO03QJSav3EKhI7kBLPPLXK/pub?output=csv';
 
 let schedule = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
@@ -88,7 +88,7 @@ const root = document.getElementById('programs'), title = document.getElementByI
 let currentDay = 'mon';
 
 function parseCSV(text) {
-  const lines = text.trim().split('\n');
+  const lines = text.trim().split(/\r?\n/);
   return lines.map(line => {
     const row = [];
     let insideQuote = false, cell = '';
@@ -121,17 +121,18 @@ function show(day){
 async function loadData() {
   try {
     const res = await fetch(CSV_URL);
-    if (!res.ok) throw new Error('Network response was not ok');
+    if (!res.ok) throw new Error('CSV取得エラー');
     const rows = parseCSV(await res.text());
     
     const newSchedule = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
     
-    // ヘッダーをスキップして行を解析
     rows.slice(1).forEach(row => {
       const [type, dayOrKey, val1, val2, val3] = row;
       if (type === 'config' && dayOrKey === 'effective_date') {
-        document.getElementById('effectiveText').textContent = val1;
-        document.getElementById('footerText').innerHTML = `FMたまん 76.3MHz｜番組表（${val1}）<br>本ページはスプレッドシートからリアルタイム配信されています。`;
+        if (val1) {
+          document.getElementById('effectiveText').textContent = val1;
+          document.getElementById('footerText').innerHTML = `FMたまん 76.3MHz｜番組表（${val1}）<br>本ページはスプレッドシートからリアルタイム配信されています。`;
+        }
       } else if (type === 'schedule' && dayOrKey && newSchedule[dayOrKey]) {
         newSchedule[dayOrKey].push([val1 || '', val2 || '', val3 || '']);
       }
