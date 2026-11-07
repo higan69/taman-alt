@@ -56,7 +56,7 @@ footer{max-width:1100px;margin:0 auto;padding:0 18px 30px;color:#69747b;font-siz
   </div>
  </div>
 
- <!-- 目立つ公式SNS誘導バナー -->
+ <!-- 公式SNS誘導バナー -->
  <div class="official-links-banner">
   <div class="banner-text">
    <strong>📌 FMたまん 公式情報・最新お知らせ</strong>
@@ -79,7 +79,7 @@ footer{max-width:1100px;margin:0 auto;padding:0 18px 30px;color:#69747b;font-siz
  <p>FMたまん 76.3MHz｜週間番組案内</p>
 </header>
 <main>
- <div class="notice">※このページは個人による非公式サイトです。公式な情報は各SNSから確認してください。<br />※都合により番組名・担当者は変更になる場合があります。</div>
+  <div class="notice">※このページは個人による非公式サイトです。公式な情報は各SNSから確認してください。<br />※都合により番組名・担当者は変更になる場合があります。</div>
  <nav class="controls" aria-label="曜日を選択">
   <button data-day="mon" aria-pressed="true">月</button><button data-day="tue" aria-pressed="false">火</button><button data-day="wed" aria-pressed="false">水</button><button data-day="thu" aria-pressed="false">木</button><button data-day="fri" aria-pressed="false">金</button><button data-day="sat" aria-pressed="false">土</button><button data-day="sun" aria-pressed="false">日</button>
  </nav>
@@ -96,7 +96,15 @@ const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT_F4wafmKFLfNK
 let schedule = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
 const labels = {mon:"月曜日",tue:"火曜日",wed:"水曜日",thu:"木曜日",fri:"金曜日",sat:"土曜日",sun:"日曜日"};
 const root = document.getElementById('programs'), title = document.getElementById('dayTitle');
-let currentDay = 'mon';
+
+// 曜日を自動判定する関数 (0:日, 1:月, 2:火, 3:水, 4:木, 5:金, 6:土)
+function getTodayKey() {
+  const dayIndex = new Date().getDay();
+  const keys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  return keys[dayIndex];
+}
+
+let currentDay = getTodayKey(); // 初期表示を今日の曜日に設定
 
 function parseCSV(text) {
   const lines = text.trim().split(/\r?\n/);
@@ -150,7 +158,7 @@ async function loadData() {
     });
 
     schedule = newSchedule;
-    show(currentDay);
+    show(currentDay); // 判定された今日の曜日で表示を更新
   } catch (err) {
     console.error('データ読み込みエラー:', err);
     root.innerHTML = '<div style="padding:20px;color:red;">データの読み込みに失敗しました。</div>';
