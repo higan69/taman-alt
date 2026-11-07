@@ -63,7 +63,7 @@ footer{max-width:1100px;margin:0 auto;padding:0 18px 30px;color:#69747b;font-siz
   </div>
  </div>
  <h1>TIME TABLE 番組表</h1>
- <span class="effective" id="effectiveText">読み込み中...</span>
+ <span class="effective" id="effectiveText">2026年9月〜</span>
  <p>FMたまん 76.3MHz｜週間番組案内</p>
 </header>
 <main>
@@ -79,19 +79,14 @@ footer{max-width:1100px;margin:0 auto;padding:0 18px 30px;color:#69747b;font-siz
 <footer id="footerText">FMたまん 76.3MHz｜番組表</footer>
 
 <script>
-// 公開されたCSVのベースURL
-const CSV_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT_F4wafmKFLfNKp-_46zgBzCFiS56l3vXVu0f1JmZWj_HGX6JB2juzJGO03QJSav3EKhI7kBLPPLXK/pub?output=csv';
-
-// 複数シートがある場合のシート名指定URL（シート名をgidまたはsheetで指定）
-const CONFIG_URL = `${CSV_BASE}&sheet=Config`;
-const SCHEDULE_URL = `${CSV_BASE}&sheet=Schedule`;
+// Googleスプレッドシートを「ウェブに公開（CSV）」したURLを設定してください
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT_F4wafmKFLfNKp-_46zgBzCFiS56l3vXVu0f1JmZWj_HGX6JB2juzJGO03QJSav3EKhI7kBLPPLXK/pub?output=csv';
 
 let schedule = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
 const labels = {mon:"月曜日",tue:"火曜日",wed:"水曜日",thu:"木曜日",fri:"金曜日",sat:"土曜日",sun:"日曜日"};
 const root = document.getElementById('programs'), title = document.getElementById('dayTitle');
 let currentDay = 'mon';
 
-// CSVパース関数
 function parseCSV(text) {
   const lines = text.trim().split('\n');
   return lines.map(line => {
@@ -123,38 +118,27 @@ function show(day){
   document.querySelectorAll('button[data-day]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.day===day)));
 }
 
-// データ読み込み処理
 async function loadData() {
   try {
-    // 1. 設定データの取得（有効年月）
-    const configRes = await fetch(CONFIG_URL);
-    if (configRes.ok) {
-      const configRows = parseCSV(await configRes.text());
-      const effectiveRow = configRows.find(r => r[0] === 'effective_date');
-      if (effectiveRow && effectiveRow[1]) {
-        const val = effectiveRow[1];
-        document.getElementById('effectiveText').textContent = val;
-        document.getElementById('footerText').innerHTML = `FMたまん 76.3MHz｜番組表（${val}）<br>本ページはスプレッドシートからリアルタイム配信されています。`;
+    const res = await fetch(CSV_URL);
+    if (!res.ok) throw new Error('Network response was not ok');
+    const rows = parseCSV(await res.text());
+    
+    const newSchedule = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
+    
+    // ヘッダーをスキップして行を解析
+    rows.slice(1).forEach(row => {
+      const [type, dayOrKey, val1, val2, val3] = row;
+      if (type === 'config' && dayOrKey === 'effective_date') {
+        document.getElementById('effectiveText').textContent = val1;
+        document.getElementById('footerText').innerHTML = `FMたまん 76.3MHz｜番組表（${val1}）<br>本ページはスプレッドシートからリアルタイム配信されています。`;
+      } else if (type === 'schedule' && dayOrKey && newSchedule[dayOrKey]) {
+        newSchedule[dayOrKey].push([val1 || '', val2 || '', val3 || '']);
       }
-    }
+    });
 
-    // 2. 番組表データの取得
-    const scheduleRes = await fetch(SCHEDULE_URL);
-    if (scheduleRes.ok) {
-      const scheduleRows = parseCSV(await scheduleRes.text());
-      // ヘッダー行をスキップ
-      const dataRows = scheduleRows.slice(1);
-      
-      const newSchedule = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
-      dataRows.forEach(row => {
-        const [day, time, name, detail] = row;
-        if (day && newSchedule[day]) {
-          newSchedule[day].push([time || '', name || '', detail || '']);
-        }
-      });
-      schedule = newSchedule;
-      show(currentDay);
-    }
+    schedule = newSchedule;
+    show(currentDay);
   } catch (err) {
     console.error('データ読み込みエラー:', err);
     root.innerHTML = '<div style="padding:20px;color:red;">データの読み込みに失敗しました。</div>';
@@ -163,7 +147,6 @@ async function loadData() {
 
 document.querySelectorAll('button[data-day]').forEach(b=>b.addEventListener('click',()=>show(b.dataset.day)));
 
-// 初回ロード
 loadData();
 </script>
 </body>
