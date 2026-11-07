@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>FMたまん 76.3MHz｜番組表</title>
+<style>
+:root{--blue:#08a8d2;--ink:#242424;--line:#d6dce0;--muted:#68737b;--paper:#f5f7f8}
+*{box-sizing:border-box} body{margin:0;background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;line-height:1.5}
+header{background:#fff;border-bottom:4px solid var(--blue);padding:22px max(18px,calc((100% - 1100px)/2))}
+.header-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand-mark{font-size:clamp(30px,6vw,52px);font-weight:900;letter-spacing:-.07em;color:var(--blue);line-height:1}
+.brand-mark small{display:block;font-size:12px;letter-spacing:.08em;color:#555}
+.freq{font-size:14px;font-weight:700;color:#6e3474}
+
+/* SNS Links */
+.sns-links{display:flex;gap:10px;align-items:center;margin-top:6px}
+.sns-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;font-size:13px;font-weight:700;text-decoration:none;color:#fff;transition:opacity .2s}
+.sns-btn:hover{opacity:.85}
+.sns-x{background:#000}
+.sns-insta{background:linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)}
+.sns-btn svg{width:16px;height:16px;fill:currentColor}
+
+h1{font-size:clamp(22px,4vw,32px);margin:18px 0 3px}
+.effective{display:inline-block;background:#f4dce8;border:1px solid #b96b8b;padding:3px 12px;font-weight:800;border-radius:3px}
+header p{margin:8px 0 0;color:var(--muted);font-size:13px}
+main{max-width:1100px;margin:22px auto;padding:0 14px 40px}
+.notice{background:#fff7e8;border-left:4px solid #e99b35;padding:10px 13px;margin-bottom:16px;font-size:13px}
+.controls{display:flex;gap:7px;flex-wrap:wrap;margin:14px 0}
+button{font:inherit;border:1px solid #b9c4ca;background:#fff;border-radius:7px;padding:9px 13px;cursor:pointer;font-weight:700}
+button[aria-pressed=true]{background:#087fa8;color:#fff;border-color:#087fa8}
+.day-panel{background:white;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.day-head{padding:16px 18px;background:#f0f8fa;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.day-head h2{font-size:22px;margin:0}.day-head span{font-size:12px;color:var(--muted)}
+.programs{padding:4px 16px}
+.item{display:grid;grid-template-columns:76px 1fr;gap:14px;padding:14px 2px;border-bottom:1px solid #e8ecee}
+.item:last-child{border-bottom:0}.time{font-weight:800;color:#087fa8;font-size:16px;font-variant-numeric:tabular-nums}
+.name{font-weight:800;font-size:16px}.detail{font-size:13px;color:#59646b;margin-top:3px}
+.music{color:#68737b;font-weight:600}
+footer{max-width:1100px;margin:0 auto;padding:0 18px 30px;color:#69747b;font-size:12px}
+@media(min-width:760px){.programs{display:grid;grid-template-columns:1fr 1fr;column-gap:28px}.item{align-content:start}}
+@media(max-width:420px){.item{grid-template-columns:62px 1fr;gap:8px}.time{font-size:14px}.programs{padding:3px 12px}}
+</style>
+</head>
+<body>
+<header>
+ <div class="header-top">
+  <div class="brand">
+   <div class="brand-mark">FM TAMAN<small>COMMUNITY RADIO</small></div>
+   <div class="freq">76.3 MHz<br>糸満コミュニティFM</div>
+  </div>
+  <div class="sns-links">
+   <a href="https://x.com/fmtaman763" target="_blank" rel="noopener" class="sns-btn sns-x" aria-label="X (旧Twitter)">
+    <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+    X
+   </a>
+   <a href="https://www.instagram.com/fm_taman/" target="_blank" rel="noopener" class="sns-btn sns-insta" aria-label="Instagram">
+    <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+    Instagram
+   </a>
+  </div>
+ </div>
+ <h1>TIME TABLE 番組表</h1>
+ <span class="effective" id="effectiveText">読み込み中...</span>
+ <p>FMたまん 76.3MHz｜週間番組案内</p>
+</header>
+<main>
+ <div class="notice">※都合により番組名・担当者は変更になる場合があります。</div>
+ <nav class="controls" aria-label="曜日を選択">
+  <button data-day="mon" aria-pressed="true">月</button><button data-day="tue" aria-pressed="false">火</button><button data-day="wed" aria-pressed="false">水</button><button data-day="thu" aria-pressed="false">木</button><button data-day="fri" aria-pressed="false">金</button><button data-day="sat" aria-pressed="false">土</button><button data-day="sun" aria-pressed="false">日</button>
+ </nav>
+ <section class="day-panel" aria-live="polite">
+  <div class="day-head"><h2 id="dayTitle">月曜日</h2><span>FMたまん 76.3MHz</span></div>
+  <div class="programs" id="programs">読み込み中...</div>
+ </section>
+</main>
+<footer id="footerText">FMたまん 76.3MHz｜番組表</footer>
+
+<script>
+// 公開されたCSVのベースURL
+const CSV_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT_F4wafmKFLfNKp-_46zgBzCFiS56l3vXVu0f1JmZWj_HGX6JB2juzJGO03QJSav3EKhI7kBLPPLXK/pub?output=csv';
+
+// 複数シートがある場合のシート名指定URL（シート名をgidまたはsheetで指定）
+const CONFIG_URL = `${CSV_BASE}&sheet=Config`;
+const SCHEDULE_URL = `${CSV_BASE}&sheet=Schedule`;
+
+let schedule = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
+const labels = {mon:"月曜日",tue:"火曜日",wed:"水曜日",thu:"木曜日",fri:"金曜日",sat:"土曜日",sun:"日曜日"};
+const root = document.getElementById('programs'), title = document.getElementById('dayTitle');
+let currentDay = 'mon';
+
+// CSVパース関数
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  return lines.map(line => {
+    const row = [];
+    let insideQuote = false, cell = '';
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') {
+        if (insideQuote && line[i+1] === '"') { cell += '"'; i++; }
+        else { insideQuote = !insideQuote; }
+      } else if (c === ',' && !insideQuote) {
+        row.push(cell.trim()); cell = '';
+      } else {
+        cell += c;
+      }
+    }
+    row.push(cell.trim());
+    return row;
+  });
+}
+
+function show(day){
+  currentDay = day;
+  title.textContent = labels[day];
+  const items = schedule[day] || [];
+  root.innerHTML = items.length === 0 ? '<div style="padding:20px;text-align:center;">番組データがありません</div>' : items.map(([time,name,detail])=>
+    `<article class="item"><div class="time">${time}</div><div><div class="name">${name.includes('Music')?'<span class="music">':'<span>'}${name}</span></div>${detail?`<div class="detail">${detail}</div>`:''}</div></article>`
+  ).join('');
+  document.querySelectorAll('button[data-day]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.day===day)));
+}
+
+// データ読み込み処理
+async function loadData() {
+  try {
+    // 1. 設定データの取得（有効年月）
+    const configRes = await fetch(CONFIG_URL);
+    if (configRes.ok) {
+      const configRows = parseCSV(await configRes.text());
+      const effectiveRow = configRows.find(r => r[0] === 'effective_date');
+      if (effectiveRow && effectiveRow[1]) {
+        const val = effectiveRow[1];
+        document.getElementById('effectiveText').textContent = val;
+        document.getElementById('footerText').innerHTML = `FMたまん 76.3MHz｜番組表（${val}）<br>本ページはスプレッドシートからリアルタイム配信されています。`;
+      }
+    }
+
+    // 2. 番組表データの取得
+    const scheduleRes = await fetch(SCHEDULE_URL);
+    if (scheduleRes.ok) {
+      const scheduleRows = parseCSV(await scheduleRes.text());
+      // ヘッダー行をスキップ
+      const dataRows = scheduleRows.slice(1);
+      
+      const newSchedule = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
+      dataRows.forEach(row => {
+        const [day, time, name, detail] = row;
+        if (day && newSchedule[day]) {
+          newSchedule[day].push([time || '', name || '', detail || '']);
+        }
+      });
+      schedule = newSchedule;
+      show(currentDay);
+    }
+  } catch (err) {
+    console.error('データ読み込みエラー:', err);
+    root.innerHTML = '<div style="padding:20px;color:red;">データの読み込みに失敗しました。</div>';
+  }
+}
+
+document.querySelectorAll('button[data-day]').forEach(b=>b.addEventListener('click',()=>show(b.dataset.day)));
+
+// 初回ロード
+loadData();
+</script>
+</body>
+</html>
