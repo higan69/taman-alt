@@ -125,34 +125,43 @@ function getTodayKey() {
 
 let currentDay = getTodayKey();
 
-function isNowOnAir(dayKey, timeStr) {
-  try {
-    if (dayKey !== getTodayKey()) return false;
-    if (!timeStr) return false;
+// 時刻文字列（例: "12:00〜"）から分数を計算するヘルパー
+function parseMinutes(timeStr) {
+  if (!timeStr) return null;
+  const cleanStr = timeStr.replace(/[〜~\-ー].*/, '').trim(); // "12:00〜" -> "12:00"
+  const parts = cleanStr.split(':');
+  if (parts.length < 2) return null;
+  const h = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10);
+  return isNaN(h) || isNaN(m) ? null : h * 60 + m;
+}
 
-    const now = new Date();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+// 該当番組が現在放送中か判定
+function checkIfOnAir(dayKey, index, items) {
+  if (dayKey !== getTodayKey()) return false;
+  
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-    const times = timeStr.split(/[〜~\-ー]/).map(t => t.trim());
-    if (times.length === 0) return false;
+  const currentTimeStr = items[index][0];
+  const startMinutes = parseMinutes(currentTimeStr);
+  if (startMinutes === null) return false;
 
-    const parseTime = (t) => {
-      const parts = t.split(':');
-      if (parts.length < 2) return null;
-      return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
-    };
-
-    const startMinutes = parseTime(times[0]);
-    if (startMinutes === null) return false;
-
-    let endMinutes = times[1] ? parseTime(times[1]) : startMinutes + 60;
-    if (endMinutes < startMinutes) endMinutes += 24 * 60;
-
-    return currentMinutes >= startMinutes && currentMinutes < endMinutes;
-  } catch (e) {
-    console.error('Time parse error:', e);
-    return false;
+  // 次の番組の開始時刻を終了時刻とみなす（最後の番組の場合は翌朝6:00や24時間換算などまで、あるいは一律3時間など仮定）
+  let endMinutes = 24 * 60; // デフォルトは深夜0時まで
+  if (index + 1 < items.length) {
+    const nextStartMinutes = parseMinutes(items[index + 1][0]);
+    if (nextStartMinutes !== null) {
+      endMinutes = nextStartMinutes;
+    }
   }
+
+  // 日を跨ぐ場合の考慮（例: 23:00開始で次が翌0:30など）
+  if (endMinutes < startMinutes) {
+    endMinutes += 24 * 60;
+  }
+
+  return currentMinutes >= startMinutes && currentMinutes < endMinutes;
 }
 
 function parseCSV(text) {
@@ -181,8 +190,8 @@ function show(day){
   title.textContent = labels[day];
   const items = schedule[day] || [];
   
-  root.innerHTML = items.length === 0 ? '<div style="padding:20px;text-align:center;">番組データがありません</div>' : items.map(([time,name,detail]) => {
-    const onAir = isNowOnAir(day, time);
+  root.innerHTML = items.length === 0 ? '<div style="padding:20px;text-align:center;">番組データがありません</div>' : items.map(([time, name, detail], index) => {
+    const onAir = checkIfOnAir(day, index, items);
     const itemClass = onAir ? 'item is-now-on-air' : 'item';
     const badge = onAir ? '<span class="badge-onair">ON AIR</span>' : '';
     const safeName = name || '';
@@ -190,8 +199,7 @@ function show(day){
     return `<article class="${itemClass}">
       <div class="time">${time}</div>
       <div>
-        <div class="name">${safeName.includes('Music') ? '<span class="music">' : '<span>'}${safeName}</span>${badge}</div>
-        ${detail ? `<div class="detail">${detail}</div>` : ''}
+        <div class="name">${safeName.includes('Music') ? '<span class="music">' : '<span>'}${safeName}</span>${badge}</div>${detail ? `<div class="detail">${detail}</div>` : ''}
       </div>
     </article>`;
   }).join('');
@@ -212,24 +220,4 @@ async function loadData() {
       if (type === 'config' && dayKey === 'effective_date') {
         if (time) {
           document.getElementById('effectiveText').textContent = time;
-          document.getElementById('footerText').innerHTML = `FMたまん 76.3MHz｜番組表（${time}）<br>本ページはスプレッドシートからリアルタイム配信されています。`;
-        }
-      } else if (type === 'schedule' && dayKey && newSchedule[dayKey]) {
-        newSchedule[dayKey].push([time || '', name || '', detail || '']);
-      }
-    });
-
-    schedule = newSchedule;
-    show(currentDay);
-  } catch (err) {
-    console.error('データ読み込みエラー:', err);
-    root.innerHTML = '<div style="padding:20px;color:red;">データの読み込みに失敗しました。</div>';
-  }
-}
-
-document.querySelectorAll('button[data-day]').forEach(b => b.addEventListener('click', () => show(b.dataset.day)));
-
-loadData();
-</script>
-</body>
-</html>
+          document.getElementById('footerText').innerHTML = `FMたまん 76.3
