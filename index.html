@@ -111,4 +111,15 @@ footer{max-width:1100px;margin:0 auto;padding:0 18px 30px;color:#69747b;font-siz
 <footer id="footerText">FMたまん 76.3MHz｜番組表</footer>
 
 <script>
-const CSV_URL = '
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT_F4wafmKFLfNKp-_46zgBzCFiS56l3vXVu0f1JmZWj_HGX6JB2juzJGO03QJSav3EKhI7kBLPPLXK/pub?output=csv';
+
+let schedule = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
+const labels = {mon:"月曜日",tue:"火曜日",wed:"水曜日",thu:"木曜日",fri:"金曜日",sat:"土曜日",sun:"日曜日"};
+const root = document.getElementById('programs'), title = document.getElementById('dayTitle');
+
+// 曜日を自動判定する関数 (0:日, 1:月, 2:火, 3:水, 4:木, 5:金, 6:土)
+function getTodayKey() {
+  const dayIndex = new Date().getDay();
+  const keys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  return keys[dayIndex];
+}
