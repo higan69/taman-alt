@@ -39,10 +39,25 @@ button[aria-pressed=true]{background:#087fa8;color:#fff;border-color:#087fa8}
 .day-head{padding:16px 18px;background:#f0f8fa;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px}
 .day-head h2{font-size:22px;margin:0}.day-head span{font-size:12px;color:var(--muted)}
 .programs{padding:4px 16px}
-.item{display:grid;grid-template-columns:76px 1fr;gap:14px;padding:14px 2px;border-bottom:1px solid #e8ecee}
-.item:last-child{border-bottom:0}.time{font-weight:800;color:#087fa8;font-size:16px;font-variant-numeric:tabular-nums}
+.item{display:grid;grid-template-columns:76px 1fr;gap:14px;padding:14px 2px;border-bottom:1px solid #e8ecee;border-radius:8px;transition:background-color 0.3s ease}
+.item:last-child{border-bottom:0}
+.time{font-weight:800;color:#087fa8;font-size:16px;font-variant-numeric:tabular-nums}
 .name{font-weight:800;font-size:16px}.detail{font-size:13px;color:#59646b;margin-top:3px}
 .music{color:#68737b;font-weight:600}
+
+/* 放送中（ON AIR）スロットのスタイル */
+.item.is-now-on-air{background:#e6f7ff;border-left:5px solid #08a8d2;box-shadow:0 2px 8px rgba(8, 168, 210, 0.15);padding-left:10px}
+
+/* ON AIR バッジ */
+.badge-onair{display:inline-flex;align-items:center;gap:5px;background:#e63946;color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:12px;margin-left:8px;vertical-align:middle;letter-spacing:0.05em}
+.badge-onair::before{content:"";display:inline-block;width:6px;height:6px;background-color:#fff;border-radius:50%;animation:pulse 1.2s infinite ease-in-out}
+
+@keyframes pulse{
+  0%{opacity:0.3;transform:scale(0.8)}
+  50%{opacity:1;transform:scale(1.2)}
+  100%{opacity:0.3;transform:scale(0.8)}
+}
+
 footer{max-width:1100px;margin:0 auto;padding:0 18px 30px;color:#69747b;font-size:12px}
 @media(min-width:760px){.programs{display:grid;grid-template-columns:1fr 1fr;column-gap:28px}.item{align-content:start}}
 @media(max-width:420px){.item{grid-template-columns:62px 1fr;gap:8px}.time{font-size:14px}.programs{padding:3px 12px}}
@@ -73,4 +88,156 @@ footer{max-width:1100px;margin:0 auto;padding:0 18px 30px;color:#69747b;font-siz
     Instagram
    </a>
    <a href="https://www.youtube.com/@FM-lf8gp" target="_blank" rel="noopener" class="sns-btn sns-youtube" aria-label="公式YouTube">
-    <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3
+    <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+    YouTube
+   </a>
+  </div>
+ </div>
+
+ <h1>[非公式]TIME TABLE 番組表</h1>
+ <span class="effective" id="effectiveText">2026年9月〜</span>
+ <p>FMたまん 76.3MHz｜週間番組案内</p>
+</header>
+<main>
+  <div class="notice">※このページは個人による非公式サイトです。公式な情報は各SNSから確認してください。<br />※都合により番組名・担当者は変更になる場合があります。</div>
+ <nav class="controls" aria-label="曜日を選択">
+  <button data-day="mon" aria-pressed="true">月</button><button data-day="tue" aria-pressed="false">火</button><button data-day="wed" aria-pressed="false">水</button><button data-day="thu" aria-pressed="false">木</button><button data-day="fri" aria-pressed="false">金</button><button data-day="sat" aria-pressed="false">土</button><button data-day="sun" aria-pressed="false">日</button>
+ </nav>
+ <section class="day-panel" aria-live="polite">
+  <div class="day-head"><h2 id="dayTitle">月曜日</h2><span>FMたまん 76.3MHz</span></div>
+  <div class="programs" id="programs">読み込み中...</div>
+ </section>
+</main>
+<footer id="footerText">FMたまん 76.3MHz｜番組表</footer>
+
+<script>
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT_F4wafmKFLfNKp-_46zgBzCFiS56l3vXVu0f1JmZWj_HGX6JB2juzJGO03QJSav3EKhI7kBLPPLXK/pub?output=csv';
+
+let schedule = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
+const labels = {mon:"月曜日",tue:"火曜日",wed:"水曜日",thu:"木曜日",fri:"金曜日",sat:"土曜日",sun:"日曜日"};
+const root = document.getElementById('programs'), title = document.getElementById('dayTitle');
+
+// 曜日を自動判定する関数 (0:日, 1:月, 2:火, 3:水, 4:木, 5:金, 6:土)
+function getTodayKey() {
+  const dayIndex = new Date().getDay();
+  const keys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  return keys[dayIndex];
+}
+
+let currentDay = getTodayKey(); // 初期表示を今日の曜日に設定
+
+function parseCSV(text) {
+  const lines = text.trim().split(/\r?\n/);
+  return lines.map(line => {
+    const row = [];
+    let insideQuote = false, cell = '';
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') {
+        if (insideQuote && line[i+1] === '"') { cell += '"'; i++; }
+        else { insideQuote = !insideQuote; }
+      } else if (c === ',' && !insideQuote) {
+        row.push(cell.trim()); cell = '';
+      } else {
+        cell += c;
+      }
+    }
+    row.push(cell.trim());
+    return row;
+  });
+}
+
+// 時刻文字列から分数を計算する関数
+function parseMinutes(timeStr) {
+  if (!timeStr) return null;
+  const cleanStr = timeStr.replace(/[〜~\-ー].*/, '').trim();
+  const parts = cleanStr.split(':');
+  if (parts.length < 2) return null;
+  const h = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10);
+  return isNaN(h) || isNaN(m) ? null : h * 60 + m;
+}
+
+// 現在放送中か判定する関数
+function isNowOnAir(dayKey, index, items) {
+  if (dayKey !== getTodayKey()) return false;
+  
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  const currentTimeStr = items[index][0];
+  const startMinutes = parseMinutes(currentTimeStr);
+  if (startMinutes === null) return false;
+
+  let endMinutes = 24 * 60;
+  if (index + 1 < items.length) {
+    const nextStartMinutes = parseMinutes(items[index + 1][0]);
+    if (nextStartMinutes !== null) {
+      endMinutes = nextStartMinutes;
+    }
+  }
+
+  if (endMinutes < startMinutes) {
+    endMinutes += 24 * 60;
+  }
+
+  return currentMinutes >= startMinutes && currentMinutes < endMinutes;
+}
+
+function show(day){
+  currentDay = day;
+  title.textContent = labels[day];
+  const items = schedule[day] || [];
+  
+  root.innerHTML = items.length === 0 ? '<div style="padding:20px;text-align:center;">番組データがありません</div>' : items.map(([time, name, detail], index) => {
+    const onAir = isNowOnAir(day, index, items);
+    const itemClass = onAir ? 'item is-now-on-air' : 'item';
+    const badge = onAir ? '<span class="badge-onair">ON AIR</span>' : '';
+    const safeName = name || '';
+
+    return `<article class="${itemClass}">
+      <div class="time">${time || ''}</div>
+      <div>
+        <div class="name">${safeName.includes('Music') ? '<span class="music">' : '<span>'}${safeName}</span>${badge}</div>
+        ${detail ? `<div class="detail">${detail}</div>` : ''}
+      </div>
+    </article>`;
+  }).join('');
+
+  document.querySelectorAll('button[data-day]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.day === day)));
+}
+
+async function loadData() {
+  try {
+    const res = await fetch(CSV_URL);
+    if (!res.ok) throw new Error('CSV取得エラー');
+    const rows = parseCSV(await res.text());
+    
+    const newSchedule = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
+    
+    rows.slice(1).forEach(row => {
+      const [type, dayKey, time, name, detail] = row;
+      if (type === 'config' && dayKey === 'effective_date') {
+        if (time) {
+          document.getElementById('effectiveText').textContent = time;
+          document.getElementById('footerText').innerHTML = `FMたまん 76.3MHz｜番組表（${time}）<br>本ページはスプレッドシートからリアルタイム配信されています。`;
+        }
+      } else if (type === 'schedule' && dayKey && newSchedule[dayKey]) {
+        newSchedule[dayKey].push([time || '', name || '', detail || '']);
+      }
+    });
+
+    schedule = newSchedule;
+    show(currentDay); // 判定された今日の曜日で表示を更新
+  } catch (err) {
+    console.error('データ読み込みエラー:', err);
+    root.innerHTML = '<div style="padding:20px;color:red;">データの読み込みに失敗しました。</div>';
+  }
+}
+
+document.querySelectorAll('button[data-day]').forEach(b=>b.addEventListener('click',()=>show(b.dataset.day)));
+
+loadData();
+</script>
+</body>
+</html>
