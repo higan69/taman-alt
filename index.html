@@ -42,8 +42,18 @@ button[aria-pressed=true]{background:#087fa8;color:#fff;border-color:#087fa8}
 .item{display:grid;grid-template-columns:76px 1fr;gap:14px;padding:14px 2px;border-bottom:1px solid #e8ecee;border-radius:8px;transition:background-color 0.3s ease}
 .item:last-child{border-bottom:0}
 .time{font-weight:800;color:#087fa8;font-size:16px;font-variant-numeric:tabular-nums}
-.name{font-weight:800;font-size:16px}.detail{font-size:13px;color:#59646b;margin-top:3px}
+.name{font-weight:800;font-size:16px}.detail{font-size:14px;color:#59646b;margin-top:3px;line-height:1.65}
 .music{color:#68737b;font-weight:600}
+
+/* お知らせ（Googleドキュメント）・緊急バナー */
+.doc-section{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:16px}
+.doc-section h2{font-size:18px;margin:0 0 10px}
+.gdoc .doc-content{padding:0!important;max-width:none!important}
+.gdoc img{max-width:100%;height:auto}
+.gdoc{overflow-x:auto}
+.alert-block{background:#b91c1c;color:#fff;border-radius:12px;padding:14px 18px;margin-bottom:16px;font-weight:700}
+.alert-block .gdoc,.alert-block .gdoc *{color:#fff!important}
+
 
 /* 放送中（ON AIR）スロットのスタイル */
 .item.is-now-on-air{background:#e6f7ff;border-left:5px solid #08a8d2;box-shadow:0 2px 8px rgba(8, 168, 210, 0.15);padding-left:10px}
@@ -99,7 +109,9 @@ footer{max-width:1100px;margin:0 auto;padding:0 18px 30px;color:#69747b;font-siz
  <p>FMたまん 76.3MHz｜週間番組案内</p>
 </header>
 <main>
+  <div id="alertArea"></div>
   <div class="notice">※このページは個人による非公式サイトです。公式な情報は各SNSから確認してください。<br />※都合により番組名・担当者は変更になる場合があります。</div>
+  <div id="docArea"></div>
  <nav class="controls" aria-label="曜日を選択">
   <button data-day="mon" aria-pressed="true">月</button><button data-day="tue" aria-pressed="false">火</button><button data-day="wed" aria-pressed="false">水</button><button data-day="thu" aria-pressed="false">木</button><button data-day="fri" aria-pressed="false">金</button><button data-day="sat" aria-pressed="false">土</button><button data-day="sun" aria-pressed="false">日</button>
  </nav>
@@ -112,6 +124,9 @@ footer{max-width:1100px;margin:0 auto;padding:0 18px 30px;color:#69747b;font-siz
 
 <script>
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT_F4wafmKFLfNKp-_46zgBzCFiS56l3vXVu0f1JmZWj_HGX6JB2juzJGO03QJSav3EKhI7kBLPPLXK/pub?output=csv';
+// お知らせ・緊急バナー用ドキュメント（「ウェブに公開」のURL）。空の間は表示されません。
+const DOC_URL = '';
+const ALERT_DOC_URL = '';
 
 let schedule = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
 const labels = {mon:"月曜日",tue:"火曜日",wed:"水曜日",thu:"木曜日",fri:"金曜日",sat:"土曜日",sun:"日曜日"};
@@ -169,8 +184,15 @@ function isNowOnAir(dayKey, index, items) {
   const startMinutes = parseMinutes(currentTimeStr);
   if (startMinutes === null) return false;
 
-  let endMinutes = 24 * 60;
-  if (index + 1 < items.length) {
+  // 時刻に範囲（"07:00〜09:00"）が書かれていれば、その終了時刻を優先する
+  let endMinutes = null;
+  const rangeParts = String(currentTimeStr).split(/[〜~ー]/);
+  if (rangeParts.length > 1) {
+    const explicitEnd = parseMinutes(rangeParts[rangeParts.length - 1]);
+    if (explicitEnd !== null && explicitEnd > startMinutes) endMinutes = explicitEnd;
+  }
+  if (endMinutes === null) endMinutes = 24 * 60;
+  if (endMinutes === 24 * 60 && index + 1 < items.length) {
     const nextStartMinutes = parseMinutes(items[index + 1][0]);
     if (nextStartMinutes !== null) {
       endMinutes = nextStartMinutes;
@@ -196,15 +218,158 @@ function show(day){
     const safeName = name || '';
 
     return `<article class="${itemClass}">
-      <div class="time">${time || ''}</div>
+      <div class="time">${escapeHtml(time || '')}</div>
       <div>
-        <div class="name">${safeName.includes('Music') ? '<span class="music">' : '<span>'}${safeName}</span>${badge}</div>
-        ${detail ? `<div class="detail">${detail}</div>` : ''}
+        <div class="name">${safeName.includes('Music') ? '<span class="music">' : '<span>'}${escapeHtml(safeName)}</span>${badge}</div>
+        ${detail ? `<div class="detail">${escapeHtml(detail)}</div>` : ''}
       </div>
     </article>`;
   }).join('');
 
   document.querySelectorAll('button[data-day]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.day === day)));
+}
+
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function scopeCss(cssText, scope) {
+  const imports = [];
+  const css = cssText.replace(/@import[^;]+;/g, m => { imports.push(m); return ''; });
+  const rules = css.split('}').map(r => r.trim()).filter(Boolean).map(rule => {
+    const i = rule.indexOf('{');
+    if (i < 0) return '';
+    const selectors = rule.slice(0, i).split(',').map(s => s.trim())
+      .filter(s => s && !/^(html|body|:root)/.test(s));
+    if (!selectors.length) return '';
+    return selectors.map(s => scope + ' ' + s).join(',') + '{' + rule.slice(i + 1) + '}';
+  }).filter(Boolean).join('\n');
+  return imports.join('\n') + '\n' + rules;
+}
+
+// ドキュメント内の画像は Google 側の埋め込み制限で直接表示できないため、
+// fetch で取得し直して blob URL に差し替える
+async function fetchImageBlob(url, tries) {
+  for (let i = 0; i < tries; i++) {
+    try {
+      const r = await fetch(url);
+      if (r.ok) { const b = await r.blob(); if (!b.type || b.type.indexOf('image/') === 0) return b; }
+    } catch (e) { /* 少し待って再試行する */ }
+    if (i < tries - 1) await new Promise(res => setTimeout(res, 600 * (i + 1)));
+  }
+  return null;
+}
+// ドキュメント本文中の「文字列のままのURL」をリンクにする（既にリンクになっている部分は触らない）
+function linkifyUrls(rootEl) {
+  const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      if (!node.nodeValue || !/https?:\/\//.test(node.nodeValue)) return NodeFilter.FILTER_REJECT;
+      if (node.parentElement && node.parentElement.closest('a, script, style')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  const targets = [];
+  while (walker.nextNode()) targets.push(walker.currentNode);
+  targets.forEach(node => {
+    const text = node.nodeValue;
+    const frag = document.createDocumentFragment();
+    const re = /https?:\/\/[^\s<>"'、。，．・「」『』【】〈〉（）！？]+/g;
+    let last = 0, m, linked = false;
+    while ((m = re.exec(text))) {
+      let url = m[0];
+      while (/[.,;:!?]$/.test(url)) url = url.slice(0, -1); // 文末の句読点はURLに含めない
+      if (url.endsWith(')') && !url.includes('(')) url = url.slice(0, -1);
+      if (!url) continue;
+      frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+      const a = document.createElement('a');
+      a.href = url;
+      a.textContent = url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      frag.appendChild(a);
+      last = m.index + url.length;
+      linked = true;
+    }
+    if (!linked) return;
+    frag.appendChild(document.createTextNode(text.slice(last)));
+    node.parentNode.replaceChild(frag, node);
+  });
+}
+
+async function fixDocImages(div) {
+  const jobs = [];
+  div.querySelectorAll('img').forEach(img => {
+    const srcAttr = img.getAttribute('src') || '';
+    if (!/^https:\/\/docs\.google\.com\//.test(srcAttr)) return;
+    jobs.push((async () => {
+      const b = await fetchImageBlob(srcAttr, 3);
+      if (b) { img.src = URL.createObjectURL(b); return; }
+      setTimeout(async () => {
+        const retry = await fetchImageBlob(srcAttr, 2);
+        if (retry) img.src = URL.createObjectURL(retry);
+        else img.style.display = 'none'; // 取得できない画像は壊れたアイコンを残さない
+      }, 2500);
+    })());
+  });
+  await Promise.all(jobs);
+}
+
+async function fetchDocContents(rawUrl) {
+  let url = rawUrl;
+  if (/\/pub$/.test(url)) url += '?embedded=true';
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Doc取得エラー');
+  const parsed = new DOMParser().parseFromString(await res.text(), 'text/html');
+  const contents = parsed.querySelector('#contents') || parsed.querySelector('.doc-content');
+  if (!contents) throw new Error('Doc解析エラー');
+  return { parsed, contents };
+}
+
+function buildDocDiv(parsed, contents, scopeClass) {
+  let css = '';
+  parsed.querySelectorAll('style').forEach(s => { css += s.textContent + '\n'; });
+  const styleEl = document.createElement('style');
+  styleEl.textContent = scopeCss(css, '.' + scopeClass);
+  document.head.appendChild(styleEl);
+  const div = document.createElement('div');
+  div.className = 'gdoc ' + scopeClass;
+  div.innerHTML = contents.innerHTML;
+  div.querySelectorAll('a').forEach(a => { a.target = '_blank'; a.rel = 'noopener'; });
+  fixDocImages(div);
+  linkifyUrls(div);
+  return div;
+}
+
+// お知らせ：ドキュメントに内容があれば表示、空・未設定・失敗なら何も出さない
+async function loadNoticeDoc() {
+  if (!DOC_URL) return;
+  try {
+    const { parsed, contents } = await fetchDocContents(DOC_URL);
+    if (!contents.textContent.trim() && !contents.querySelector('img')) return;
+    const section = document.createElement('section');
+    section.className = 'doc-section';
+    section.innerHTML = '<h2>📢 お知らせ</h2>';
+    section.appendChild(buildDocDiv(parsed, contents, 'gdoc-notice'));
+    document.getElementById('docArea').appendChild(section);
+  } catch (err) {
+    console.error('お知らせ読み込みエラー:', err);
+  }
+}
+
+// 緊急バナー：ドキュメントに書けば表示され、空にすれば消える（操作はお知らせと同じ）
+async function loadAlertDoc() {
+  if (!ALERT_DOC_URL) return;
+  try {
+    const { parsed, contents } = await fetchDocContents(ALERT_DOC_URL);
+    if (!contents.textContent.trim()) return;
+    const section = document.createElement('section');
+    section.className = 'alert-block';
+    section.appendChild(buildDocDiv(parsed, contents, 'gdoc-alert'));
+    document.getElementById('alertArea').appendChild(section);
+  } catch (err) {
+    console.error('緊急バナー読み込みエラー:', err);
+  }
 }
 
 async function loadData() {
@@ -238,6 +403,11 @@ async function loadData() {
 document.querySelectorAll('button[data-day]').forEach(b=>b.addEventListener('click',()=>show(b.dataset.day)));
 
 loadData();
+loadAlertDoc();
+loadNoticeDoc();
+
+// 放送中表示を1分ごとに付け直す（今日のタブを見ているときだけ）
+setInterval(() => { if (currentDay === getTodayKey()) show(currentDay); }, 60000);
 </script>
 </body>
 </html>
