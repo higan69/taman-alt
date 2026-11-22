@@ -39,9 +39,9 @@ button[aria-pressed=true]{background:#087fa8;color:#fff;border-color:#087fa8}
 .day-head{padding:16px 18px;background:#f0f8fa;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px}
 .day-head h2{font-size:22px;margin:0}.day-head span{font-size:12px;color:var(--muted)}
 .programs{padding:4px 16px}
-.item{display:grid;grid-template-columns:76px 1fr;gap:14px;padding:14px 2px;border-bottom:1px solid #e8ecee;border-radius:8px;transition:background-color 0.3s ease}
+.item{display:grid;grid-template-columns:104px 1fr;gap:14px;padding:14px 2px;border-bottom:1px solid #e8ecee;border-radius:8px;transition:background-color 0.3s ease}
 .item:last-child{border-bottom:0}
-.time{font-weight:800;color:#087fa8;font-size:16px;font-variant-numeric:tabular-nums}
+.time{font-weight:800;color:#087fa8;font-size:16px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .name{font-weight:800;font-size:16px}.detail{font-size:14px;color:#59646b;margin-top:3px;line-height:1.65}
 .music{color:#68737b;font-weight:600}
 
@@ -70,7 +70,7 @@ button[aria-pressed=true]{background:#087fa8;color:#fff;border-color:#087fa8}
 
 footer{max-width:1100px;margin:0 auto;padding:0 18px 30px;color:#69747b;font-size:12px}
 /* 番組表はPCでも1カラム（時系列が左→右→下に流れるのは不自然なため） */
-@media(max-width:420px){.item{grid-template-columns:62px 1fr;gap:8px}.time{font-size:14px}.programs{padding:3px 12px}}
+@media(max-width:420px){.item{grid-template-columns:62px 1fr;gap:8px}.time{font-size:14px;white-space:normal}.programs{padding:3px 12px}}
 </style>
 </head>
 <body>
