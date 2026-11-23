@@ -136,8 +136,8 @@ const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT_F4wafmKFLfNK
 // お知らせ・緊急バナー用ドキュメント（「ウェブに公開」のURL）。空の間は表示されません。
 const DOC_URL = '';
 const ALERT_DOC_URL = '';
-// ライブ配信チェック用 Apps Script の URL。空の間はチェックしません。
-const LIVE_CHECK_URL = 'https://script.google.com/macros/s/AKfycbx_qgMWwU5NNJnnr0zRAy9VweG7PLmgK06Noatfs4A8le1oxiivtQ3LJf2TSkXCUgR4/exec';
+// ライブ配信状態（GitHub Actions が5分ごとに更新する live.json）。空にすると無効。
+const LIVE_CHECK_URL = 'live.json';
 
 let schedule = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
 const labels = {mon:"月曜日",tue:"火曜日",wed:"水曜日",thu:"木曜日",fri:"金曜日",sat:"土曜日",sun:"日曜日"};
@@ -418,7 +418,7 @@ let liveVideoId = null;
 async function checkLiveStream() {
   if (!LIVE_CHECK_URL) return;
   try {
-    const res = await fetch(LIVE_CHECK_URL, { cache: 'no-store' });
+    const res = await fetch(LIVE_CHECK_URL + '?t=' + Math.floor(Date.now() / 60000), { cache: 'no-store' });
     if (!res.ok) return;
     const data = await res.json();
     const area = document.getElementById('liveArea');
