@@ -54,6 +54,14 @@ button[aria-pressed=true]{background:#087fa8;color:#fff;border-color:#087fa8}
 .alert-block{background:#b91c1c;color:#fff;border-radius:12px;padding:14px 18px;margin-bottom:16px;font-weight:700}
 .alert-block .gdoc,.alert-block .gdoc *{color:#fff!important}
 
+/* ライブ配信（YouTube） */
+.live-section{background:#fff;border:2px solid #e63946;border-radius:12px;padding:16px 18px;margin-bottom:16px}
+.live-section h2{font-size:18px;margin:0 0 6px;color:#c1121f;display:flex;align-items:center;gap:8px}
+.live-section h2::before{content:"";display:inline-block;width:10px;height:10px;background:#e63946;border-radius:50%;animation:pulse 1.2s infinite ease-in-out}
+.live-title{font-weight:700;margin-bottom:10px}
+.live-frame{position:relative;width:100%;max-width:800px;margin:0 auto;aspect-ratio:16/9;background:#000;border-radius:8px;overflow:hidden}
+.live-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+
 
 /* 放送中（ON AIR）スロットのスタイル */
 .item.is-now-on-air{background:#e6f7ff;border-left:5px solid #08a8d2;box-shadow:0 2px 8px rgba(8, 168, 210, 0.15);padding-left:10px}
@@ -112,6 +120,7 @@ footer{max-width:1100px;margin:0 auto;padding:0 18px 30px;color:#69747b;font-siz
   <div id="alertArea"></div>
   <div class="notice">※このページは個人による非公式サイトです。公式な情報は各SNSから確認してください。<br />※都合により番組名・担当者は変更になる場合があります。</div>
   <div id="docArea"></div>
+  <div id="liveArea"></div>
  <nav class="controls" aria-label="曜日を選択">
   <button data-day="mon" aria-pressed="true">月</button><button data-day="tue" aria-pressed="false">火</button><button data-day="wed" aria-pressed="false">水</button><button data-day="thu" aria-pressed="false">木</button><button data-day="fri" aria-pressed="false">金</button><button data-day="sat" aria-pressed="false">土</button><button data-day="sun" aria-pressed="false">日</button>
  </nav>
@@ -127,6 +136,8 @@ const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT_F4wafmKFLfNK
 // お知らせ・緊急バナー用ドキュメント（「ウェブに公開」のURL）。空の間は表示されません。
 const DOC_URL = '';
 const ALERT_DOC_URL = '';
+// ライブ配信チェック用 Apps Script の URL。空の間はチェックしません。
+const LIVE_CHECK_URL = '';
 
 let schedule = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
 const labels = {mon:"月曜日",tue:"火曜日",wed:"水曜日",thu:"木曜日",fri:"金曜日",sat:"土曜日",sun:"日曜日"};
@@ -402,12 +413,60 @@ async function loadData() {
 
 document.querySelectorAll('button[data-day]').forEach(b=>b.addEventListener('click',()=>show(b.dataset.day)));
 
+// ライブ配信中なら番組表の上に動画を埋め込む。配信がなければ何も出さない（普段通り）
+let liveVideoId = null;
+async function checkLiveStream() {
+  if (!LIVE_CHECK_URL) return;
+  try {
+    const res = await fetch(LIVE_CHECK_URL, { cache: 'no-store' });
+    if (!res.ok) return;
+    const data = await res.json();
+    const area = document.getElementById('liveArea');
+    if (data && data.live && data.videoId) {
+      if (liveVideoId === data.videoId) return; // 同じ配信なら作り直さない（再生が止まらないように）
+      liveVideoId = data.videoId;
+      area.innerHTML = '';
+      const section = document.createElement('section');
+      section.className = 'live-section';
+      section.setAttribute('aria-label', 'ライブ配信');
+      const h = document.createElement('h2');
+      h.textContent = 'ライブ配信中';
+      section.appendChild(h);
+      if (data.title) {
+        const t = document.createElement('div');
+        t.className = 'live-title';
+        t.textContent = data.title;
+        section.appendChild(t);
+      }
+      const frame = document.createElement('div');
+      frame.className = 'live-frame';
+      const iframe = document.createElement('iframe');
+      iframe.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(data.videoId);
+      iframe.title = 'FMたまん ライブ配信';
+      iframe.allow = 'accelerometer; autoplay; encrypted-media; picture-in-picture';
+      iframe.allowFullscreen = true;
+      frame.appendChild(iframe);
+      section.appendChild(frame);
+      area.appendChild(section);
+    } else if (liveVideoId !== null) {
+      liveVideoId = null;
+      area.innerHTML = ''; // 配信が終わったら普段の表示に戻す
+    }
+  } catch (err) {
+    console.error('ライブ配信チェックエラー:', err); // 失敗してもページは普段通り
+  }
+}
+
 loadData();
 loadAlertDoc();
 loadNoticeDoc();
 
 // 放送中表示を1分ごとに付け直す（今日のタブを見ているときだけ）
 setInterval(() => { if (currentDay === getTodayKey()) show(currentDay); }, 60000);
+
+// ライブ配信は5分ごとに確認する
+checkLiveStream();
+setInterval(checkLiveStream, 5 * 60000);
 </script>
 </body>
 </html>
