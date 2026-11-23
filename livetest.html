@@ -2,10 +2,17 @@
 <html lang="ja">
 <head><meta charset="UTF-8"><title>live_stream embed test v2</title></head>
 <body>
-<h1>live_stream 埋め込み検証 v2（iframe直書き方式）</h1>
+<h1>live_stream 埋め込み検証 v3（?ch=でチャンネル差し替え可）</h1>
 <iframe id="player" width="480" height="270"
   src="https://www.youtube.com/embed/live_stream?channel=UCxsijZ-IubrgLiaY4le_KaA&enablejsapi=1"
   frameborder="0" allowfullscreen></iframe>
+<script>
+  // ?ch=チャンネルID で対象チャンネルを差し替え可能にする
+  (function () {
+    var ch = new URLSearchParams(location.search).get('ch');
+    if (ch) document.getElementById('player').src = 'https://www.youtube.com/embed/live_stream?channel=' + ch + '&enablejsapi=1';
+  })();
+</script>
 <pre id="log" style="white-space:pre-wrap;font-size:13px"></pre>
 <script>
 const logEl = document.getElementById('log');
