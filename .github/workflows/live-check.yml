@@ -1,3 +1,5 @@
+# FMたまん ライブ判定（5分ごとに実行）
+
 name: live-check
 
 on:
