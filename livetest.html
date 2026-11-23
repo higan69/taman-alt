@@ -1,17 +1,16 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head><meta charset="UTF-8"><title>live_stream embed test</title></head>
+<head><meta charset="UTF-8"><title>live_stream embed test v2</title></head>
 <body>
-<h1>live_stream 埋め込み検証（FMたまん、現在は配信なし想定）</h1>
-<div id="player"></div>
+<h1>live_stream 埋め込み検証 v2（iframe直書き方式）</h1>
+<iframe id="player" width="480" height="270"
+  src="https://www.youtube.com/embed/live_stream?channel=UCxsijZ-IubrgLiaY4le_KaA&enablejsapi=1"
+  frameborder="0" allowfullscreen></iframe>
 <pre id="log" style="white-space:pre-wrap;font-size:13px"></pre>
 <script>
 const logEl = document.getElementById('log');
 const t0 = Date.now();
-function log(msg) {
-  const line = '[' + ((Date.now() - t0) / 1000).toFixed(1) + 's] ' + msg;
-  logEl.textContent += line + '\n';
-}
+function log(msg) { logEl.textContent += '[' + ((Date.now() - t0) / 1000).toFixed(1) + 's] ' + msg + '\n'; }
 log('page loaded');
 var tag = document.createElement('script');
 tag.src = 'https://www.youtube.com/iframe_api';
@@ -20,42 +19,26 @@ let player = null;
 function onYouTubeIframeAPIReady() {
   log('IFrame API ready');
   player = new YT.Player('player', {
-    width: 480, height: 270,
-    playerVars: { autoplay: 0, mute: 1 },
     events: {
       onReady: (e) => {
         log('onReady');
-        try { log('videoData at ready: ' + JSON.stringify(e.target.getVideoData())); } catch (err) { log('getVideoData error: ' + err); }
-        try { log('duration at ready: ' + e.target.getDuration()); } catch (err) {}
-        try { log('playerState at ready: ' + e.target.getPlayerState()); } catch (err) {}
+        try { log('videoData: ' + JSON.stringify(e.target.getVideoData())); } catch (err) { log('getVideoData error: ' + err); }
+        try { log('videoUrl: ' + e.target.getVideoUrl()); } catch (err) {}
+        try { log('duration: ' + e.target.getDuration() + ' state: ' + e.target.getPlayerState()); } catch (err) {}
       },
       onStateChange: (e) => {
         log('onStateChange: ' + e.data);
         try { log('  videoData: ' + JSON.stringify(player.getVideoData())); } catch (err) {}
-        try { log('  duration: ' + player.getDuration()); } catch (err) {}
+        try { log('  videoUrl: ' + player.getVideoUrl() + ' duration: ' + player.getDuration()); } catch (err) {}
       },
       onError: (e) => { log('onError: ' + e.data); }
     }
   });
-  // live_stream 埋め込みを読み込む
-  setTimeout(() => {
-    try {
-      player.cueVideoById ? log('player methods ok') : null;
-      player.loadVideoByUrl ? null : null;
-      // cue by URL: live_stream の URL を直接 iframe に設定する方式も併記するため、ここでは loadVideoByUrl を使う
-      player.cueVideoByUrl('https://www.youtube.com/embed/live_stream?channel=UCxsijZ-IubrgLiaY4le_KaA');
-      log('cued live_stream URL');
-    } catch (err) { log('cue error: ' + err); }
-  }, 500);
-  // 定期ポーリング
   let n = 0;
   const iv = setInterval(() => {
     n++;
     try {
-      const vd = player.getVideoData ? player.getVideoData() : null;
-      const st = player.getPlayerState ? player.getPlayerState() : '?';
-      const dur = player.getDuration ? player.getDuration() : '?';
-      log('poll ' + n + ': state=' + st + ' duration=' + dur + ' videoData=' + JSON.stringify(vd));
+      log('poll ' + n + ': state=' + player.getPlayerState() + ' duration=' + player.getDuration() + ' url=' + player.getVideoUrl() + ' videoData=' + JSON.stringify(player.getVideoData()));
     } catch (err) { log('poll ' + n + ' error: ' + err); }
     if (n >= 12) { clearInterval(iv); log('DONE'); }
   }, 2500);
